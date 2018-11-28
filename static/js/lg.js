@@ -1,9 +1,3 @@
-
-
-$(window).unload(function(){
-		$(".progress").show()
-		});
-
 function change_url(loc){
 	$(".progress").show(0, function(){
 		document.location = loc;
@@ -29,8 +23,8 @@ function update_view(){
 
 	$(".navbar li").removeClass('active');
 
-	$(".proto a#"+proto).parent().addClass('active');
-	$(".hosts a[id='"+hosts+"']").parent().addClass('active');
+	$("a#"+proto+".proto").addClass('active');
+	$(".hosts a[id='"+hosts+"']").addClass('active');
 	$(".request_type a#"+request_type).parent().addClass('active');
 
 	command = $(".request_type a#"+request_type).text().split("...");
@@ -74,7 +68,7 @@ $(function(){
 			update_view();
 			reload();
 			});
-		$(".proto a").click(function(){
+		$("a.proto").click(function(){
 			proto = $(this).attr('id');
 			update_view();
 			reload();
