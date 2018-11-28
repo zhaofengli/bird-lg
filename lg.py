@@ -138,14 +138,14 @@ def bird_proxy(host, proto, service, query):
     elif proto == "ipv4":
         path = service
 
-    port = app.config["PROXY"].get(host, "")
+    proxyHost = app.config["PROXY"].get(host, "")
 
-    if not port:
+    if not proxyHost:
         return False, 'Host "%s" invalid' % host
     elif not path:
         return False, 'Proto "%s" invalid' % proto
     else:
-        url = "http://%s.%s:%d/%s?q=%s" % (host, app.config["DOMAIN"], port, path, quote(query))
+        url = "http://%s/%s?q=%s" % (proxyHost, path, quote(query))
         try:
             f = urlopen(url)
             resultat = f.read()
