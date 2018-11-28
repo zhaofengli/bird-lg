@@ -24,10 +24,12 @@
 					{% endfor %}
 				</ul>
 
+        {% if not config.UNIFIED_DAEMON %}
 				<div class="btn-group">
 					<a class="btn btn-primary proto" id="ipv4" href="#">ipv4</a>
 					<a class="btn btn-primary proto" id="ipv6" href="#">ipv6</a>
         </div>
+        {% endif %}
 
 				<ul class="nav">
 					<li class="nav-item dropdown request_type">
@@ -74,7 +76,7 @@
 							{% for hosts, proto, request_type, request_args in session.history %}
 							<a class="list-group-item list-group-item-action {% if loop.first %}active{% endif %}"
               href="/{{ [request_type, hosts, proto]|join("/") }}{% if request_args %}?q={{request_args}}{% endif %}">
-                  {{hosts}}/{{proto}}: {{ commands_dict[request_type]|replace("...", request_args) }}
+                {{hosts}}{% if not config.UNIFIED_DAEMON %}/{{proto}}{% endif %}: {{ commands_dict[request_type]|replace("...", request_args) }}
               </a>
 
 							{% endfor %}

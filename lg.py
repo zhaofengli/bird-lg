@@ -32,7 +32,7 @@ from urllib import quote, unquote
 import json
 import random
 
-from toolbox import mask_is_valid, ipv6_is_valid, ipv4_is_valid, resolve, save_cache_pickle, load_cache_pickle, unescape
+from toolbox import mask_is_valid, ip_is_valid, ipv6_is_valid, ipv4_is_valid, resolve, resolve_any, save_cache_pickle, load_cache_pickle, unescape
 #from xml.sax.saxutils import escape
 
 
@@ -119,7 +119,10 @@ def whois_command(query):
 
 def bird_command(host, proto, query):
     """Alias to bird_proxy for bird service"""
-    return bird_proxy(host, proto, "bird", query)
+    if app.config.get("UNIFIED_DAEMON", False):
+        return bird_proxy(host, "ipv4", "bird", query)
+    else:
+        return bird_proxy(host, proto, "bird", query)
 
 
 def bird_proxy(host, proto, service, query):
@@ -305,16 +308,23 @@ def traceroute(hosts, proto):
 
     set_session("traceroute", hosts, proto, q)
 
-    if proto == "ipv6" and not ipv6_is_valid(q):
-        try:
-            q = resolve(q, "AAAA")
-        except:
-            return error_page("%s is unresolvable or invalid for %s" % (q, proto))
-    if proto == "ipv4" and not ipv4_is_valid(q):
-        try:
-            q = resolve(q, "A")
-        except:
-            return error_page("%s is unresolvable or invalid for %s" % (q, proto))
+    if app.config.get("UNIFIED_DAEMON", False):
+        if not ip_is_valid(q):
+            try:
+                q = resolve_any(q)
+            except:
+                return error_page("%s is unresolvable" % q)
+    else:
+        if proto == "ipv6" and not ipv6_is_valid(q):
+            try:
+                q = resolve(q, "AAAA")
+            except:
+                return error_page("%s is unresolvable or invalid for %s" % (q, proto))
+        if proto == "ipv4" and not ipv4_is_valid(q):
+            try:
+                q = resolve(q, "A")
+            except:
+                return error_page("%s is unresolvable or invalid for %s" % (q, proto))
 
     errors = []
     infos = {}
@@ -608,23 +618,37 @@ def show_route(request_type, hosts, proto):
         if len(expression.split("/")) == 2:
             expression, mask = (expression.split("/"))
 
-        if not mask and proto == "ipv4":
-            mask = "32"
-        if not mask and proto == "ipv6":
-            mask = "128"
-        if not mask_is_valid(mask):
-            return error_page("mask %s is invalid" % mask)
+        if app.config.get("UNIFIED_DAEMON", False):
+            if not ip_is_valid(expression):
+                try:
+                    expression = resolve_any(expression)
+                except:
+                    return error_page("%s is unresolvable" % expression)
 
-        if proto == "ipv6" and not ipv6_is_valid(expression):
-            try:
-                expression = resolve(expression, "AAAA")
-            except:
-                return error_page("%s is unresolvable or invalid for %s" % (expression, proto))
-        if proto == "ipv4" and not ipv4_is_valid(expression):
-            try:
-                expression = resolve(expression, "A")
-            except:
-                return error_page("%s is unresolvable or invalid for %s" % (expression, proto))
+            if not mask and ipv4_is_valid(expression):
+                mask = "32"
+            if not mask and ipv6_is_valid(expression):
+                mask = "128"
+            if not mask_is_valid(mask):
+                return error_page("mask %s is invalid" % mask)
+        else:
+            if not mask and proto == "ipv4":
+                mask = "32"
+            if not mask and proto == "ipv6":
+                mask = "128"
+            if not mask_is_valid(mask):
+                return error_page("mask %s is invalid" % mask)
+
+            if proto == "ipv6" and not ipv6_is_valid(expression):
+                try:
+                    expression = resolve(expression, "AAAA")
+                except:
+                    return error_page("%s is unresolvable or invalid for %s" % (expression, proto))
+            if proto == "ipv4" and not ipv4_is_valid(expression):
+                try:
+                    expression = resolve(expression, "A")
+                except:
+                    return error_page("%s is unresolvable or invalid for %s" % (expression, proto))
 
         if mask:
             expression += "/" + mask

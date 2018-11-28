@@ -31,6 +31,14 @@ resolv.lifetime = 1
 def resolve(n, q):
 	return str(resolv.query(n,q)[0])
 
+def resolve_any(h):
+    try:
+        return resolve(h, "AAAA")
+    except:
+        pass
+    return resolve(h, "A")
+
+
 def mask_is_valid(n):
 	if not n: 
 		return True
@@ -39,6 +47,9 @@ def mask_is_valid(n):
 		return ( mask >= 1 and mask <= 128)
 	except:
 		return False
+
+def ip_is_valid(n):
+    return ipv4_is_valid(n) or ipv6_is_valid(n)
 
 def ipv4_is_valid(n):
     try:
