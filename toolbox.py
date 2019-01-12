@@ -84,7 +84,7 @@ def load_cache_pickle(filename, default = None):
 
 def unescape(s):
     want_unicode = False
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         s = s.encode("utf-8")
         want_unicode = True
 
@@ -106,5 +106,5 @@ def unescape(s):
     # join the extracted strings and return
     es = ""
     if want_unicode:
-        es = u""
+        es = ""
     return es.join(list)
