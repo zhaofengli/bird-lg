@@ -167,7 +167,6 @@ def bird_proxy(host, proto, service, query):
 @app.context_processor
 def inject_commands():
     commands = [
-            ("traceroute", "traceroute ..."),
             ("summary", "show protocols"),
             ("detail", "show protocols ... all"),
             ("prefix", "show route for ..."),
@@ -176,8 +175,6 @@ def inject_commands():
             ("where", "show route where net ~ [ ... ]"),
             ("where_detail", "show route where net ~ [ ... ] all"),
             ("where_bgpmap", "show route where net ~ [ ... ] (bgpmap)"),
-            ("adv", "show route ..."),
-            ("adv_bgpmap", "show route ... (bgpmap)"),
         ]
     commands_dict = {}
     for id, text in commands:
@@ -297,6 +294,10 @@ def detail(hosts, proto):
     detail = {}
     errors = []
     for host in hosts.split("+"):
+        if name.startswith("r_") or name.startswith("l_"):
+            errors.append("%s: Protocol cannot be inspected" % name)
+            continue
+
         ret, res = bird_command(host, proto, command)
         res = res.split("\n")
 
@@ -315,6 +316,9 @@ def detail(hosts, proto):
 
 @app.route("/traceroute/<hosts>/<proto>")
 def traceroute(hosts, proto):
+    # Neutered
+    abort(400)
+
     q = get_query()
 
     if not q:
@@ -628,6 +632,9 @@ def show_route(request_type, hosts, proto):
         all = " all"
 
     if request_type.startswith("adv"):
+        # Neutered
+        abort(400)
+
         command = "show route " + expression.strip()
         if bgpmap and not command.endswith("all"):
             command = command + " all"
