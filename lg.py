@@ -152,8 +152,10 @@ def bird_proxy(host, proto, service, query):
         return False, 'Proto "%s" invalid' % proto
     else:
         url = "http://%s/%s?q=%s" % (proxyHost, path, quote(query))
+        proxy_timeout = app.config["PROXY_TIMEOUT"].get(service, 60)
+
         try:
-            f = urlopen(url)
+            f = urlopen(url, None, proxy_timeout)
             resultat = f.read().decode('utf-8')
             status = True                # retreive remote status
         except IOError:
