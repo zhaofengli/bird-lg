@@ -260,7 +260,16 @@ def summary(hosts, proto="ipv4"):
                     props["table"] = split[2]
                     props["state"] = split[3]
                     props["since"] = split[4]
-                    props["info"] = ' '.join(split[5:]) if len(split) > 5 else ""
+                    if len(split) > 5:
+                        # if bird is configured for 'timeformat protocol iso long'
+                        # then the 5th column contains the time, rather than info
+                        match =	re.match(r'\d\d:\d\d:\d\d', split[5])
+                        if match:
+                            props["info"] = ' '.join(split[6:]) if len(split) > 6 else ""
+                        else:
+                            props["info"] = ' '.join(split[5:])
+                    else:
+                        props["info"] = ""
                     data.append(props)
                 else:
                     app.logger.warning("couldn't parse: %s", line)
